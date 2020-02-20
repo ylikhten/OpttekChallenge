@@ -111,9 +111,16 @@ class ProductionLine{
 		//calcTime += totalProdTime;
 		//System.out.println(calcTime);
 
-		while(true){
+		long start = System.nanoTime();
+
+		/*while(true){
 			if(!solver.solve()) break;
-		}
+		}*/
+		solver.solve();
+
+		long end = System.nanoTime();
+		long duration = (end - start) / 1000;
+		System.out.println("Time: " + duration);
 
 		//System.out.println(solver.swapTwo().toString());	
 	}
