@@ -9,8 +9,17 @@ import java.util.regex.*;
 import java.util.Arrays;
 import java.util.Collections;
 
+/**
+ *	Top-level driving class for the coding challenge.
+ * @author Yanina Likhtenshteyn
+ */
+
 class ProductionLine{	
 	
+	/**
+	 * Reads input files
+	 * @return A String object containing the entire file's text
+	 */
 	private static String readFile(String filePath)
 		throws IOException
 	{
@@ -22,7 +31,10 @@ class ProductionLine{
 		return fileStr;
 	}
 	
-
+	/**
+	 * Converts strings into integers
+	 * @return An integer array
+	 */
 	private static int[] stringToIntArray(String str){
 		String[] strSplit = str.split("\\s+");
 		int[] result = new int[strSplit.length];
@@ -32,12 +44,16 @@ class ProductionLine{
 				result[i] = n;
 			} catch(NumberFormatException nfe){
 				result[i] = -1;
-				//System.out.println(nfe.getMessage());
 			}
 		}
 		return result;
 	}
 
+	/**
+	 * Reads in file containing production times for a given product
+	 * Counts number of products and sums total production time
+	 * @return An integer array containing the number of products and the total production time
+	 */
 	private static int[] initializeProdTime(){
 		String prodTime = "";
 		try{
@@ -51,9 +67,13 @@ class ProductionLine{
 		for(int s : strSplit){
 			 result += s;
 		}
-		return new int[]{result, numProducts};
+		return new int[]{numProducts, result};
 	}
 
+	/**
+	 * Reads in file containing swap times between products
+	 * @return Returns 2D integer array containing the swap times between products
+	 */
 	private static int[][] initializeSwapTimes(int numProducts){
 		String swapTimes = "";
 		try{
@@ -71,33 +91,11 @@ class ProductionLine{
 		return result;
 	}
 
-/*
-	private static Product[] initializeProducts(){
-		String prodTimes = "";
-		String swapTimes = "";
-		try{
-			prodTimes = readFile("main/prodTimes.txt");
-			swapTimes = readFile("main/swapTimes.txt");
-		} catch(IOException e){
-			e.printStackTrace();
-		}
-		
-		int[] prod = stringToIntArray(prodTimes);
-		int[] swap = stringToIntArray(swapTimes);
-
-		Product[] products = new Product[prod.length];
-		int plen = prod.length;
-		for(int i = 0; i < plen; i++){
-			products[i] = new Product(i, prod[i], Arrays.copyOfRange(swap, i * plen, (i * plen) + plen));
-		}
-		return products;
-	}
-*/
 	public static void main(String args[]){		
 	
 		int temp[] = initializeProdTime();
-		int numProducts = temp[1];
-		int totalProdTime = temp[0];
+		int numProducts = temp[0];
+		int totalProdTime = temp[1];
 
 		int[][] swapTimes = initializeSwapTimes(numProducts);
 
@@ -105,24 +103,21 @@ class ProductionLine{
 
 		Solver solver = new Solver(swapTimes, startingSeq);
 
-		//System.out.println(Arrays.deepToString(swapTimes));
-
-		//int calcTime = solver.calcProductionTime();
-		//calcTime += totalProdTime;
-		//System.out.println(calcTime);
-
-		long start = System.nanoTime();
-
-		/*while(true){
-			if(!solver.solve()) break;
-		}*/
 		solver.solve();
 
-		long end = System.nanoTime();
-		long duration = (end - start) / 1000;
-		System.out.println("Time: " + duration);
-
-		//System.out.println(solver.swapTwo().toString());	
+		int[] sequence = solver.getSequence();
+		String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		System.out.print("Ending sequence: ");
+		for(int i = 0; i < sequence.length; i++){
+			int j = sequence[i];
+			if(i == 0){
+				System.out.print("(" + alphabet.charAt(j) + ", ");
+			} else if(i == sequence.length - 1){
+				System.out.print(alphabet.charAt(j) + ")\n");
+			} else{
+				System.out.print(alphabet.charAt(j) + ", ");
+			}
+		}
+		System.out.println("Production time: " + (solver.calcProductionTime() + totalProdTime));
 	}
-
 }

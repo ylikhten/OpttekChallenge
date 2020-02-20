@@ -2,52 +2,48 @@ package main;
 
 import java.util.*;
 
+/**
+ * Solver class implements the algorithm that finds the minimal production time
+ * @author Yanina Likhtenshteyn
+ */
 public class Solver{
 
-	int[][] swapTimes;
-	int[] sequence;
-	int[] currentSwaps;
-	int[] swapDifferentials;
-	TreeMap<Integer, ArrayList<Integer>> swapTree; // swap value, list of indices
-	HashMap<Integer, Integer> swapMap; // index to swap value
-	//int[] indicesToOperate = new int[3];
-	//PriorityQueue<SwapCandidate> pSwap;
+	int[][] swapTimes; // 2D array containing swap time between products
+	int[] sequence; // maintains the current sequence of products
+	int[] currentSwaps; // maintains the current swap times between products
+	TreeMap<Integer, ArrayList<Integer>> swapTree; // swap difference value, list of indices
+	HashMap<Integer, Integer> swapMap; // index, swap difference value
 
 	public Solver(int[][] swapTimes, int[] sequence){
 		this.swapTimes = swapTimes;
 		this.sequence = sequence;
-		//currentSwaps = new int[sequence.length - 1];
 		initializeSwapList();
-		swapDifferentials = new int[sequence.length - 1];
 		swapTree = new TreeMap<Integer, ArrayList<Integer>>();
 		swapMap = new HashMap<Integer, Integer>();
-		//initializePQueue();
 	}
 	
-/*	private void initializePQueue(){
-		for(int i = 0; i < sequence.length - 1; i++){
-			// pQueue population time complexity: O(n)
-			pSwap.add(new SwapCandidate(i, swapTimes[sequence[i]][sequence[i + 1]]));
-
-		}
-		printQueue();
+	/**
+	 * Gets current product sequence.
+	 */
+	public int[] getSequence(){
+		return sequence;
 	}
-*/
 
+	/**
+	 * Initialize the currentSwap list by checking the swap times between two adjacent products
+	 */
 	private void initializeSwapList(){
 		currentSwaps = new int[sequence.length - 1];
 		for(int i = 0; i < sequence.length - 1; i++){
 			currentSwaps[i] = swapTimes[sequence[i]][sequence[i + 1]];
 		}
-		System.out.println("current: " + java.util.Arrays.toString(currentSwaps));
-		System.out.println("sequence: " + java.util.Arrays.toString(sequence));
-
 	}
 
+	/**
+	 * Update swap list after a swap occurs.
+	 * Only updates values around some given index, instead of updating the entire list.
+	 */
 	private void updateSwapList(int i){
-		//for(int i = 0; i < sequence.length - 1; i++){
-		//	currentSwaps[i] = swapTimes[sequence[i]][sequence[i + 1]];
-		//}
 		if(i == 0){
 			currentSwaps[i] = swapTimes[sequence[i]][sequence[i + 1]];
 			currentSwaps[i + 1] = swapTimes[sequence[i + 1]][sequence[i + 2]];
@@ -58,26 +54,13 @@ public class Solver{
 			currentSwaps[i - 1] = swapTimes[sequence[i - 1]][sequence[i]];
 			currentSwaps[i] = swapTimes[sequence[i]][sequence[i + 1]];
 			currentSwaps[i + 1] = swapTimes[sequence[i + 1]][sequence[i + 2]];
-
 		}
-
-		System.out.println("current: " + java.util.Arrays.toString(currentSwaps));
-		System.out.println("sequence: " + java.util.Arrays.toString(sequence));
 	}
 
-/*	private void printQueue(){
-		//PriorityQueue<SwapCandidate> i = new PriorityQueue<SwapCandidate>();
-		Iterator<SwapCandidate> itr = pSwap.iterator();
-		while(itr.hasNext()){
-			//SwapCandidate j = pSwap.poll();
-			System.out.print(itr.next() + "\n");
-			//i.add(j);
-
-		}
-		System.out.println("");
-		//pSwap = i;
-	}
-*/
+	/**
+	 * Run through the currentSwaps list and sum the swap times
+	 * @return Total swap time for a given configuration
+	 */
 	public int calcProductionTime(){
 		int result = 0;
 		for(int i : currentSwaps){
@@ -86,6 +69,10 @@ public class Solver{
 		return result;
 	}
 
+	/**
+	 * Swaps two adjacent products in a list.
+	 * Swaps occur between the ith and (i + 1)th elements in a sequence.
+	 */
 	private void swapTwo(int index){
 
 		int temp = sequence[index];
@@ -94,38 +81,52 @@ public class Solver{
 
 	}
 
+	/**
+	 * Helper method used to look up swap times between two products
+	 * @return Swap time between products i and j
+	 */
 	private int lookupSwap(int i, int j){
 		return swapTimes[sequence[i]][sequence[j]];
 	}
 
+	/**
+	 * Contains main logic of the algorithm
+	 * @return Integer indicating the index of the optimal swap position
+	 */
 	private int findIndex(int start, int end){
 		int max = Integer.MIN_VALUE;
 		int maxDiffIndex = -1;
-		// It might be necessary to check if any lookup values are -1
 		for(int i = start; i < end; i++){
+			// At each iteration, a calculation is performed to assess what the new swap time would 
+			// be between a product at i and a product at (i + 1)
+			// That is, what does the new swap time look like when product[i + 1] = product[i] and
+			// product[i] = product[i + 1]. The swap between products i and (i + 1) also affects 
+			// products at (i - 1) and (i + 2), so new swap times are calculated for those as well and 
+			// added to the new swap time total.
+			// Then a difference between the new swap time and current swap time is calculated that 
+			// will determine which swap is optimal
+
 			int newSwapTime = 0;
 			int currentSwapTime = 0;
 
 			if(i == 0){
-				// edge case - beginning of array
-				newSwapTime += lookupSwap(i + 1, i);
+				// beginning of array calc swap times for 0th position and 1st position
+				newSwapTime += lookupSwap(i + 1, i); 
 				newSwapTime += lookupSwap(i, i + 2);
 
 				currentSwapTime += currentSwaps[i];
 				currentSwapTime += currentSwaps[i + 1];
-
-
 			}
 			else if(i == sequence.length - 2){
-				// edge case - end of array
+				// end of array - calc swap times for (length - 1)th position and (length - 2)th position
 				newSwapTime += lookupSwap(i - 1, i + 1);
 				newSwapTime += lookupSwap(i + 1, i);
 					  
 				currentSwapTime += currentSwaps[i - 1];
 				currentSwapTime += currentSwaps[i];
-
 			}
 			else{
+				// middle of array - calc swap times for (i - 1)th position, ith position, (i + 1)th position
 				newSwapTime += lookupSwap(i - 1, i + 1);
 				newSwapTime += lookupSwap(i + 1, i);
 				newSwapTime += lookupSwap(i, i + 2);
@@ -134,7 +135,8 @@ public class Solver{
 				currentSwapTime += currentSwaps[i];
 				currentSwapTime += currentSwaps[i + 1];
 			}
-			int diff = currentSwapTime -newSwapTime;
+			
+			int diff = currentSwapTime - newSwapTime;
 			
 			// populate hash map
 			swapMap.put(i, diff);
@@ -148,34 +150,24 @@ public class Solver{
 				ArrayList<Integer> ind = new ArrayList<Integer>();
 				ind.add(i);
 				swapTree.put(diff, ind);
-	
 			}
-			
-			System.out.println("iteration: " + i + " diff swap time: " + diff);
-				  
-			/*	  
-			if(diff > 0 && diff > max){
-			  
-				max = diff;
-				maxDiffIndex = i;
-				System.out.println("maxDiffIndex: " + maxDiffIndex);
-			}
-			*/
 		}
 		
-		// get rightmost (largest) value from tree map O(logn)
+		// get rightmost (largest) value from tree map
+		// this is the value whose index will produce the optimal swap - O(logn)
 		max = swapTree.lastKey();
-	
+
+		// if max <= 0, then there are no improving swaps that can be made
 		if(max <= 0) return -1;
 
-		System.out.println("Tree: " + swapTree);
-		// get index of largest value O(1)
+		// get index of largest value - O(1)
 		maxDiffIndex = swapTree.get(max).get(0);
-		System.out.println("Map: " + swapMap);
 
 		ArrayList<Integer> delFromTree = new ArrayList<Integer>();
 		delFromTree.add(max);
-		// get next indices that need to be changed from the map
+
+		// get adjacent indices that need to be updated after swap is performed
+		// add them to the list that determines which values to delete from the tree
 		if(maxDiffIndex == 0){
 			delFromTree.add(swapMap.get(maxDiffIndex + 1));
 		} else if(maxDiffIndex == sequence.length - 2){
@@ -185,7 +177,7 @@ public class Solver{
 			delFromTree.add(swapMap.get(maxDiffIndex + 1));
 		}
 
-		// delete node from tree to make room for new values in next iteration
+		// delete values from tree to make room for updated values in next iteration
 		for(Integer n : delFromTree){
 			if(swapTree.get(n).size() > 1){
 				swapTree.get(n).remove(1);
@@ -194,28 +186,23 @@ public class Solver{
 				swapTree.remove(n);
 			}
 		}
-		System.out.println("Max diff Index: " + maxDiffIndex);		
 		return maxDiffIndex;
 	}
 
-
+	/**
+	 * Runs algorithm to find minimal production time
+	 */
 	public void solve(){
-		int currentProdTime = calcProductionTime();
-		//int maxDiffIndex = -1;
-		
+		// run findIndex once on entire sequence to populate tree and hash map
 		int maxDiffIndex = findIndex(0, sequence.length - 1);
-		// after first pass through to find the maxDiffIndex
+
+		// after first pass through findIndex to obtain the maxDiffIndex
 		// the tree map is built
-		// at this point, only operate on the tree map
-		// and operations will be O(logn) time
-	/*	while(maxDiffIndex != -1){
-			swapTwo(maxDiffIndex);
-			updateSwapList(maxDiffIndex);
-		}*/
+		// at this point, only operate at indices that were recently changed
+		// operations performed on tree will be O(logn) time
 		while(maxDiffIndex != -1){
 			swapTwo(maxDiffIndex);
 			updateSwapList(maxDiffIndex);
-			//int tempIndex = 0;
 			if(maxDiffIndex == 0){
 				maxDiffIndex = findIndex(0, maxDiffIndex + 2);
 			} else if(maxDiffIndex == sequence.length - 2){
@@ -223,22 +210,6 @@ public class Solver{
 			} else{
 				maxDiffIndex = findIndex(maxDiffIndex - 1, maxDiffIndex + 2);
 			}
-
-			//initializeSwapList();
-			int newProdTime = calcProductionTime();
-			//return true;
 		}	
-
-		/*if(maxDiffIndex != -1){
-			swapTwo(maxDiffIndex);
-			updateSwapList(maxDiffIndex);
-			//initializeSwapList();
-			int newProdTime = calcProductionTime();
-			return true;
-		}*/	
-
-		//return false;
-
 	}
-
 }

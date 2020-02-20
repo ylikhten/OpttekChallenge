@@ -1,0 +1,16 @@
+Opttek Coding Challenge
+Yanina Likhtenshteyn
+
+To run:
+	In the terminal, cd into OpttekChallenge directory and type:
+		javac -d . main/Solver.java && javac -d . main/driver.java && java main.ProductionLine
+	This command should work on both Linux and Windows machines.
+
+About the solution:
+	The main algorithm runs in O(n + klogn) time where n is the size of the sequence and k is 
+	the number of iterations that are required to achieve a minimal production time.
+	The TreeMap datastructure used to store the swap time differentials allows for quick 
+	lookup (O(logn)) of the largest difference, which relates to the optimal swap at that iteration. 
+	Then only the products at the swap indices and the indices adjacent to those are recalcualted 
+	instead of recalculating all n swap times.
+		
